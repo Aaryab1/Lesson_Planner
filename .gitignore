@@ -1,0 +1,183 @@
+# Python Backend
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual Environment
+backend/venv/
+backend/env/
+backend/ENV/
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Environment Variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+backend/.env
+frontend/.env
+
+# IDE and Editor Files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# Python Logs
+*.log
+logs/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+backend/*.ipynb
+
+# Node.js Frontend
+frontend/node_modules/
+frontend/.pnp
+frontend/.pnp.js
+
+# Frontend Build Output
+frontend/build/
+frontend/dist/
+
+# Frontend Testing
+frontend/coverage/
+frontend/.nyc_output
+
+# Frontend Logs
+frontend/npm-debug.log*
+frontend/yarn-debug.log*
+frontend/yarn-error.log*
+frontend/lerna-debug.log*
+
+# Frontend Runtime Data
+frontend/.eslintcache
+frontend/.stylelintcache
+
+# Frontend Optional npm cache directory
+frontend/.npm
+
+# Frontend Optional eslint cache
+frontend/.eslintcache
+
+# Frontend Microbundle cache
+frontend/.rpt2_cache/
+frontend/.rts2_cache_cjs/
+frontend/.rts2_cache_es/
+frontend/.rts2_cache_umd/
+
+# Frontend Optional REPL history
+frontend/.node_repl_history
+
+# Frontend Output of 'npm pack'
+frontend/*.tgz
+
+# Frontend Yarn Integrity file
+frontend/.yarn-integrity
+
+# Frontend parcel-bundler cache (https://parceljs.org/)
+frontend/.cache
+frontend.parcel-cache
+
+# Frontend Next.js build output
+frontend/.next
+
+# Frontend Nuxt.js build / generate output
+frontend/.nuxt
+frontend/dist
+
+# Frontend Gatsby files
+frontend/.cache/
+frontend/public
+
+# Frontend Storybook build outputs
+frontend.out
+frontend.storybook-out
+
+# Frontend Temporary folders
+frontend/tmp/
+frontend/temp/
+
+# API Keys and Secrets
+*.key
+*.pem
+secrets/
+config/secrets.json
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Backup Files
+*.bak
+*.backup
+*.old
+
+# OS Generated Files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Windows
+*.lnk
+
+# Linux
+*~
+
+# macOS
+.AppleDouble
+.LSOverride
+
+# Icon must end with two \r
+Icon
+
+# Thumbnails
+._*
+
+# Files that might appear in the root of a volume
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+
+# Directories potentially created on remote AFP share
+.AppleDB
+.AppleDesktop
+Network Trash Folder
+Temporary Items
+.apdisk 

@@ -160,72 +160,71 @@ def extract_text_from_url(url, timeout=15):
             return ""
 
 
-def scrape_topic_content(queries, api_key, cse_id, min_content_length=200, max_sources=5, max_content_per_source=2000, min_successful_sources=2, min_total_content=1000, max_rounds=3):
-    """Enhanced scraping with dynamic search depth. Accepts a list of queries and will try up to max_rounds if results are insufficient."""
-    if isinstance(queries, str):
-        queries = [queries]
+def scrape_topic_content(topic, api_key, cse_id, min_content_length=200, max_sources=5, max_content_per_source=2000):
+    """Enhanced scraping with better content aggregation and source tracking"""
+    print(f"🔍 Searching content for: {topic}")
+    
+    # Try multiple search variations for better results
+    search_queries = [
+        topic,
+        f"{topic} explanation",
+        f"{topic} educational content"
+    ]
+    
     all_links = []
-    all_sources = []
+    for query in search_queries:
+        links = search_google_cse(query, api_key, cse_id, num_results=5)  # Reduced from 8
+        all_links.extend(links)
+    
+    # Remove duplicates while preserving order
+    unique_links = list(dict.fromkeys(all_links))
+    filtered_links = filter_links(unique_links)
+    
+    print(f"Processing {len(filtered_links)} unique links...")
+    
+    sources = []
     successful_extractions = 0
     total_content_length = 0
-    round_num = 0
-    used_queries = set()
-    while round_num < max_rounds:
-        print(f"🔍 [Round {round_num+1}] Searching content for queries: {queries}")
-        round_links = []
-        for query in queries:
-            if query in used_queries:
-                continue
-            search_queries = [query]
-            for q in search_queries:
-                links = search_google_cse(q, api_key, cse_id, num_results=5)
-                round_links.extend(links)
-            used_queries.add(query)
-        # Remove duplicates while preserving order
-        unique_links = list(dict.fromkeys(all_links + round_links))
-        filtered_links = filter_links(unique_links)
-        print(f"Processing {len(filtered_links)} unique links...")
-        sources = []
-        round_successful = 0
-        round_content_length = 0
-        for i, link in enumerate(filtered_links[:max_sources]):
-            print(f"Processing {i+1}/{min(len(filtered_links), max_sources)}: {link}")
-            content = extract_text_from_url(link)
-            if len(content) > max_content_per_source:
-                content = content[:max_content_per_source] + "... [content truncated]"
-                print(f"Content truncated to {max_content_per_source} characters")
-            content_fetched = len(content) >= min_content_length
-            source_info = SourceInfo(
-                url=link,
-                content_fetched=content_fetched,
-                content=content if content_fetched else ""
-            )
-            sources.append(source_info)
-            if content_fetched:
-                round_successful += 1
-                round_content_length += len(content)
-            time.sleep(0.5)
-        all_links = unique_links
-        all_sources.extend(sources)
-        successful_extractions += round_successful
-        total_content_length += round_content_length
-        print(f"✅ [Round {round_num+1}] Extracted from {round_successful}/{len(sources)} sources, {round_content_length} chars")
-        # Check if we have enough good content
-        if successful_extractions >= min_successful_sources and total_content_length >= min_total_content:
-            break
-        # Otherwise, ask the agent to generate new queries (broader/narrower/reworded)
-        round_num += 1
-        if round_num < max_rounds:
-            print(f"⚠️ Not enough content, should try new queries in next round.")
-            # Instruct the agent to generate new queries in the next round (handled by agent instructions)
-            # For now, just try some generic fallbacks if agent doesn't provide new queries
-            queries = [q + " educational resources" for q in queries]
-    print(f"📊 Total successful sources: {successful_extractions}, total content: {total_content_length} characters")
+    
+    for i, link in enumerate(filtered_links[:max_sources]):
+        print(f"Processing {i+1}/{min(len(filtered_links), max_sources)}: {link}")
+        
+        content = extract_text_from_url(link)
+        
+        # Truncate content if it's too long
+        if len(content) > max_content_per_source:
+            content = content[:max_content_per_source] + "... [content truncated]"
+            print(f"Content truncated to {max_content_per_source} characters")
+        
+        content_fetched = len(content) >= min_content_length
+        
+        source_info = SourceInfo(
+            url=link,
+            content_fetched=content_fetched,
+            content=content if content_fetched else ""
+        )
+        sources.append(source_info)
+        
+        if content_fetched:
+            successful_extractions += 1
+            total_content_length += len(content)
+        
+        # Add small delay to be respectful
+        time.sleep(0.5)
+    
+    print(f"✅ Successfully extracted content from {successful_extractions}/{len(sources)} sources")
+    print(f"📊 Total content: {total_content_length} characters")
+    
+    # Create comprehensive summary
     if successful_extractions > 0:
-        max_total_content = 8000
-        all_content_parts = [s.content for s in all_sources if s.content_fetched]
+        # Limit total content to prevent context overflow
+        max_total_content = 8000  # Conservative limit
+        all_content_parts = [s.content for s in sources if s.content_fetched]
+        
+        # If total content is too long, truncate it
         if total_content_length > max_total_content:
             print(f"⚠️ Total content too long ({total_content_length} chars), truncating to {max_total_content}")
+            # Take first few sources that fit within limit
             truncated_content = ""
             for content_part in all_content_parts:
                 if len(truncated_content) + len(content_part) < max_total_content:
@@ -235,14 +234,18 @@ def scrape_topic_content(queries, api_key, cse_id, min_content_length=200, max_s
             all_content = truncated_content
         else:
             all_content = "\n\n".join(all_content_parts)
-        summary = f"Successfully gathered content from {successful_extractions} sources. Total content length: {len(all_content)} characters."
+            
+        summary = f"Successfully gathered content about '{topic}' from {successful_extractions} sources. "
+        summary += f"Total content length: {len(all_content)} characters."
     else:
         all_content = ""
-        summary = "Could not extract sufficient content from the available sources. This might be due to website restrictions or content format issues."
+        summary = f"Could not extract sufficient content about '{topic}' from the available sources. "
+        summary += "This might be due to website restrictions or content format issues."
+    
     return ScrapeOutput(
-        topic=queries[0] if queries else "",
+        topic=topic,
         summary=summary,
-        sources=all_sources
+        sources=sources
     )
 
 
@@ -292,38 +295,37 @@ Ensure your output strictly matches the expected fields.
     output_type=LessonPlan,
 )
 
-# Step 1: Update the scraper agent's instructions for dynamic search depth
+@function_tool
+def scrape_tool(topic: str) -> ScrapeOutput:
+    """Enhanced scraping tool that returns structured output"""
+    return scrape_topic_content(topic, google_search_api_key, cse_id)
+
+
+
+
+
+
+
 instructions_for_scrapper = """
-You are an expert at finding educational content for lesson planning.
+Use the scrape_web tool to fetch the most relevant, readable content for a given topic.
 
-1. When given a user query (e.g., 'photosynthesis for grade 6'), rewrite it into 2–3 Google search queries that will find the most relevant educational resources, lesson plans, activities, and explanations for teachers and students.
-   - Example rewrites: 
-     - 'photosynthesis lesson plan for grade 6'
-     - 'photosynthesis activities for middle school'
-     - 'photosynthesis explained for 6th grade students'
+After successfully gathering content, you can hand off to the Lesson Planner agent to create a comprehensive lesson plan using the scraped content.
 
-2. Use the scrape_web tool with each of these queries to gather content.
+Return a structured output in the following format:
+- topic: the original topic
+- summary: a clean, concise paragraph combining the main points from all sources
+- sources: a list of websites searched, indicating whether content was fetched or not. For each source, include:
+    - url
+    - content_fetched (true/false)
+    - content (actual extracted text, or a short explanation why not)
 
-3. If the first set of queries yields insufficient or low-quality results (e.g., less than 2 good sources or less than 1000 characters of content), generate and try additional queries (broader, narrower, or reworded). Repeat up to 3 rounds if needed.
+You must include all websites you attempted to fetch from, whether successful or not.
 
-4. Aggregate the results, remove duplicates, and return a structured output:
-   - topic: the original topic
-   - summary: a clean, concise paragraph combining the main points from all sources
-   - sources: a list of websites searched, indicating whether content was fetched or not. For each source, include:
-       - url
-       - content_fetched (true/false)
-       - content (actual extracted text, or a short explanation why not)
+Once content is gathered, you can transfer to the Lesson Planner agent to create a lesson plan from the scraped content.
 """
 
-# Step 2: Update the scraping logic to allow for multiple rounds
 
-# Update the scrape_tool to accept a list of queries
-@function_tool
-def scrape_tool(queries: list[str]) -> ScrapeOutput:
-    """Enhanced scraping tool that returns structured output for a list of queries"""
-    return scrape_topic_content(queries, google_search_api_key, cse_id)
 
-# Update scraper_agent to use new instructions (already done above)
 scraper_agent = Agent(
     name="Content Fetcher",
     instructions=instructions_for_scrapper,

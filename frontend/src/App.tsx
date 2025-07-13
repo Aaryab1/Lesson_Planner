@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ThemeProvider, createTheme, CssBaseline, Container, Alert, Snackbar } from '@mui/material';
+import { ThemeProvider, createTheme, CssBaseline, Container, Alert, Snackbar, Box, Link, Typography } from '@mui/material';
 import { LessonPlanForm } from './components/LessonPlanForm';
 import { LessonPlanDisplay } from './components/LessonPlanDisplay';
 import { lessonPlanApi } from './services/api';
@@ -77,6 +77,14 @@ function App() {
             {error}
           </Alert>
         </Snackbar>
+        <Box component="footer" sx={{ mt: 6, py: 2, textAlign: 'center', borderTop: '1px solid #eee' }}>
+          <Typography variant="body2" color="text.secondary">
+            Created by{' '}
+            <Link href="https://aaryab.com.np" target="_blank" rel="noopener" underline="hover">
+              Aaryab Panta (aaryab.com.np)
+            </Link>
+          </Typography>
+        </Box>
       </Container>
     </ThemeProvider>
   );

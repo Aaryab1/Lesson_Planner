@@ -115,7 +115,7 @@ frontend/dist
 
 # Frontend Gatsby files
 frontend/.cache/
-frontend/public
+
 
 # Frontend Storybook build outputs
 frontend.out

@@ -282,7 +282,9 @@ Your job is to create a complete lesson plan using that content. Follow this exa
     - description
 - exercises: 2–4 classroom exercises.
 - assessment: 2–4 questions to assess student understanding.
-- urls: All source URLs used (from the provided content).
+- urls: ALL source URLs provided in the prompt MUST be included in this list.
+
+CRITICAL: You MUST include ALL the source URLs that are provided to you in the urls field. Do not omit any URLs. This is required for proper attribution and reference.
 
 Use only the given summary and source content to generate your answer. Keep output clean and structured.
 
@@ -461,7 +463,7 @@ async def create_lesson_plan(request: LessonPlanRequest):
             
             # Create a concise prompt for the lesson planner to avoid context overflow
             successful_sources = [s for s in result.sources if s.content_fetched]
-            source_urls = [s.url for s in successful_sources[:3]]  # Limit to first 3 sources
+            source_urls = [s.url for s in successful_sources]  # Include ALL successful source URLs
             
             # Create a more concise prompt
             prompt = f"""Create a lesson plan for: {request.topic}
@@ -476,7 +478,7 @@ Key information from sources:
                 truncated_content = source.content[:1000] + "..." if len(source.content) > 1000 else source.content
                 prompt += f"\nSource {i+1}: {truncated_content}\n"
             
-            prompt += f"\nSource URLs: {', '.join(source_urls)}"
+            prompt += f"\nIMPORTANT: You MUST include ALL of these source URLs in your lesson plan: {', '.join(source_urls)}"
             
             # Hand off to lesson planner agent using async runner
             run_result = await Runner.run(lesson_planner_agent, prompt)
@@ -496,6 +498,21 @@ Key information from sources:
                 # Fallback: try to get the result directly
                 lesson_plan = run_result
                 print(f"⚠️ Using run_result directly for lesson plan: {type(lesson_plan)}")
+            
+            # Validate that URLs are included in the lesson plan
+            if hasattr(lesson_plan, 'urls') and lesson_plan.urls:
+                print(f"✅ Lesson plan includes {len(lesson_plan.urls)} URLs: {lesson_plan.urls}")
+            else:
+                print(f"⚠️ No URLs found in lesson plan, adding them manually...")
+                # Manually add URLs if they're missing
+                if hasattr(lesson_plan, 'urls'):
+                    lesson_plan.urls = source_urls
+                else:
+                    # If urls field doesn't exist, create it
+                    lesson_plan = type(lesson_plan)(
+                        **{**lesson_plan.__dict__, 'urls': source_urls}
+                    )
+                print(f"✅ Added {len(source_urls)} URLs to lesson plan")
             
             return LessonPlanResponse(
                 success=True,

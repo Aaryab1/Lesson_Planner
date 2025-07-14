@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { LessonPlanRequest, LessonPlanResponse } from '../types/lessonPlan';
 
-const API_BASE_URL = 'https://lesson-planner-backend.onrender.com/';
+const API_BASE_URL = 'http://localhost:8000/';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
